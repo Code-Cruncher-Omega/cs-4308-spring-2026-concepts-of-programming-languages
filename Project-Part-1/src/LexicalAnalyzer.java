@@ -58,6 +58,9 @@ public class LexicalAnalyzer {
         while(!line.isEmpty()) {
             nextLexeme();
             buildLexeme();
+            if(lexeme.isEmpty() || tokenClass.isEmpty()) {
+                continue;
+            }
             tokens.add(tokenClass);
             lexemes.add(lexeme);
         }
@@ -73,6 +76,7 @@ public class LexicalAnalyzer {
 
     private static void buildLexeme() {
         lexeme = "";
+        tokenClass = "";
         if(line.isEmpty()) {
             return;
         }
