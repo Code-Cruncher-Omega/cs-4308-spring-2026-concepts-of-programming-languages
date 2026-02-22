@@ -19,6 +19,8 @@ public class LexicalAnalyzer {
     private static String line;
     private static String tokenClass;
 
+    private LexicalAnalyzer() {}    // Non-instantiable constructor
+    
     // ONLY WORKS IF THE FILE IS SYNTACTICALLY CORRECT IN THE JAVA PROGRAMMING LANGUAGE!!!!!
     public static LexerResults printAnalysis(String fileName) {
         LexerResults results = analyze(fileName);
