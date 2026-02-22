@@ -54,7 +54,7 @@ public class LexicalAnalyzer {
         }
     }
 
-    public static void analyzeLine() {
+    private static void analyzeLine() {
         while(!line.isEmpty()) {
             nextLexeme();
             buildLexeme();
@@ -71,7 +71,7 @@ public class LexicalAnalyzer {
         line = line.substring(index);
     }
 
-    public static void buildLexeme() {
+    private static void buildLexeme() {
         lexeme = "";
         if(line.isEmpty()) {
             tokenClass = "END_OF_FILE";
