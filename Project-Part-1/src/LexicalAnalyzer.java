@@ -11,49 +11,42 @@ public class LexicalAnalyzer {
             "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "package",
             "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch",
             "synchronized", "this", "throw", "throws", "transient", "try", "void", "volatile", "while", "_");
-    /* Character classes */
-    private final static int LETTER = 0;
-    private final static int DIGIT = 1;
-    private final static int UNKNOWN = 99;
-    /* Token codes */
-    private final static int INT_LIT = 10;
-    private final static int DOUBLE_LIT = 11;
-    private final static int FLOAT_LIT = 12;
-    private final static int CHAR_LIT = 13;
-    private final static int STR_LIT = 14;
-    private final static int IDENT = 15;
+    private static ArrayList<String> identifiers;   // Not used, but stored in case of future use
+    private static ArrayList<String> tokens;    // Same size as lexemes arraylist
+    private static ArrayList<String> lexemes;
 
-    private final static int ASSIGN_OP = 20;
-    private final static int ADD_OP = 21;
-    private final static int SUB_OP = 22;
-    private final static int MULT_OP = 23;
-    private final static int DIV_OP = 24;
-
-    private final static int LEFT_PAREN = 30;
-    private final static int RIGHT_PAREN = 31;
-    private final static int LEFT_C_BRACE = 32;
-    private final static int RIGHT_C_BRACE = 33;
-    private final static int LEFT_BRACK = 34;
-    private final static int RIGHT_BRACK = 35;
-
-    private static char nextChar;
-    private static String lexeme;
+    private static String lexeme = "";
     private static String line;
     private static String tokenClass;
 
+    // ONLY WORKS IF THE FILE IS SYNTACTICALLY CORRECT IN THE JAVA PROGRAMMING LANGUAGE!!!!!
+    public static LexerResults printAnalysis(String fileName) {
+        LexerResults results = analyze(fileName);
+        if(results == null) {
+            return null;
+        }
+        System.out.println("Token\t\t\t\tLexeme");
+        System.out.println();
+        for(int i = 0 ; i < tokens.size() ; i++) {
+            String tempToken = tokens.get(i);
+            String tempLexeme = lexemes.get(i);
+            System.out.println(tempToken + ((tempToken.length() < 8) ? "\t\t\t\t" : "\t\t\t") + tempLexeme);
+        }
+        System.out.println();
+        System.out.println("Total pairs of tokens and lexemes: " + tokens.size() + " (Including 'EOF' and 'END OF FILE')");
+        return results;
+    }
+
     public static LexerResults analyze(String fileName) {
         try(BufferedReader file = new BufferedReader(new FileReader(fileName))) {
-            ArrayList<String> identifiers = new ArrayList<>();
-            ArrayList<String> tokens = new ArrayList<>();
-            ArrayList<String> lexemes = new ArrayList<>();
-
+            identifiers = new ArrayList<>();
+            tokens = new ArrayList<>();
+            lexemes = new ArrayList<>();
             while((line = file.readLine()) != null) {
-
+                analyzeLine();
             }
-
-            tokens.add("-1");
-            lexemes.add("EOF");
-
+            tokens.add("EOF");
+            lexemes.add("END OF FILE");
             return new LexerResults(identifiers, tokens, lexemes);
         } catch(IOException e) {
             System.out.println("File not found!");
@@ -61,25 +54,16 @@ public class LexicalAnalyzer {
         }
     }
 
-    private void getChar() {
-        skipBlank();
-        int index = 0;
-        if(line.isEmpty()) {
-            nextChar = '\0';
-        }
-        if(line.charAt(0) == '"') {
-            tokenClass
+    public static void analyzeLine() {
+        while(!line.isEmpty()) {
+            nextLexeme();
+            buildLexeme();
+            tokens.add(tokenClass);
+            lexemes.add(lexeme);
         }
     }
 
-    private void addChar() {
-        lexeme += nextChar;
-        nextChar = '\0';
-    }
-
-    private void skipBlank() {
-        line = "";
-        lexeme = "";
+    private static void nextLexeme() {
         int index = 0;
         while(line.charAt(index) == ' ') {
             index++;
@@ -87,16 +71,132 @@ public class LexicalAnalyzer {
         line = line.substring(index);
     }
 
-    private String getTokenClass(char firstChar) {
-        firstChar = (firstChar + "").toLowerCase().charAt(0);
-        switch(firstChar) {
-            case '(':
-
-
+    public static void buildLexeme() {
+        lexeme = "";
+        if(line.isEmpty()) {
+            tokenClass = "END_OF_FILE";
+            lexeme = "EOF";
+            return;
+        }
+        int index = 1;
+        char firstChar = line.charAt(0);
+        tokenClass = getTokenClass(firstChar);
+        if(tokenClass.equals("UNKNOWN")) {
+            if(firstChar == '"') {
+                tokenClass = "STR_LITERAL";
+                lexeme += "\"";
+                char nextChar;
+                int increment;
+                while(!line.isEmpty() && index < line.length()) {
+                    nextChar = line.charAt(index);
+                    increment = 1;
+                    if(nextChar == '\\') {
+                        increment++;
+                    }
+                    lexeme += line.substring(index, index + increment);
+                    line = line.substring(index + increment - 1);
+                    if(nextChar == '"') {
+                        line = line.substring(1);
+                        break;
+                    }
+                }
+            } else if(firstChar == '\'') {
+                tokenClass = "CHAR_LITERAL";
+                if(line.charAt(1) == '\\') {
+                    lexeme = line.substring(0, 4);
+                    line = line.substring(4);
+                } else {
+                    lexeme = line.substring(0, 3);
+                    line = line.substring(3);
+                }
+            } else if(isDigit(firstChar)) {     // Checks for double and float literals too
+                tokenClass = "INT_LITERAL";
+                while(getTokenClass(line.charAt(index)).equals("UNKNOWN")) {
+                    index++;
+                }
+                lexeme = line.substring(0, index);
+                line = line.substring(index);
+                char lastChar = lexeme.charAt(lexeme.length() - 1);
+                if(lastChar == 'd' || lastChar == 'D') {
+                    tokenClass = "DOUBLE_LITERAL";
+                } else if(lastChar == 'f' || lastChar == 'F') {
+                    tokenClass = "FLOAT_LITERAL";
+                } else if(lexeme.contains(".")) {
+                    tokenClass = "DOUBLE_LITERAL";
+                }
+            } else if(isLetter(firstChar)) {
+                tokenClass = "IDENT";
+                while(getTokenClass(line.charAt(index)).equals("UNKNOWN")) {
+                    index++;
+                }
+                lexeme = line.substring(0, index);
+                line = line.substring(index);
+                for(String keyword : KEYWORDS) {
+                    if(lexeme.equals(keyword)) {
+                        tokenClass = "KEYWORD";
+                        return;     // Skip the other code since keywords aren't identifiers
+                    }
+                }
+                boolean unique = true;
+                for(int i = 0 ; i < identifiers.toArray().length ; i++) {
+                    if(lexeme.equals(identifiers.get(i))) {
+                        unique = false;
+                        break;
+                    }
+                }
+                if(unique) {
+                    identifiers.add(lexeme);
+                }
+            } else {
+                tokenClass = "ERROR! SOMETHING IN buildLexeme() FUCKED UP ;_;";
+            }
+        } else {
+            lexeme += firstChar;
+            line = line.substring(1);
         }
     }
 
-    private boolean isDigit(char input) {
+    private static String getTokenClass(char firstChar) {
+        firstChar = (firstChar + "").toLowerCase().charAt(0);
+        switch(firstChar) {
+            case '(':
+                return "LEFT_PAREN";
+            case ')':
+                return "RIGHT_PAREN";
+            case '{':
+                return "LEFT_BRACE";
+            case '}':
+                return "RIGHT_BRACE";
+            case '[':
+                return "LEFT_BRACK";
+            case ']':
+                return "RIGHT_BRACK";
+            case '=':
+                return "ASS_OP";
+            case '+':
+                return "ADD_OP";
+            case '-':
+                return "SUB_OP";
+            case '*':
+                return "MULT_OP";
+            case '/':
+                return "DIV_OP";
+            case '!':
+                return "BOOL_NOT";
+            case '.':
+                return "PERIOD";
+            case ',':
+                return "COMMA";
+            case ';':
+                return "SEMICOLON";
+            case ' ':
+                return "SPACE";     // Unreachable, but buildLexeme uses this to find the end of number literals
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    private static boolean isDigit(char input) {
         try {
             Integer.parseInt(input + "");
             return true;
@@ -105,7 +205,7 @@ public class LexicalAnalyzer {
         }
     }
 
-    private boolean isLetter(char input) {
+    private static boolean isLetter(char input) {
         String temp = (input + "").toLowerCase();
         return "abcdefghijklmnopqrstuvwxyz".contains(temp);
     }
