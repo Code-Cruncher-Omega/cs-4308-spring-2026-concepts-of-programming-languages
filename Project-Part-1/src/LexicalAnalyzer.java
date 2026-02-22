@@ -74,8 +74,6 @@ public class LexicalAnalyzer {
     private static void buildLexeme() {
         lexeme = "";
         if(line.isEmpty()) {
-            tokenClass = "END_OF_FILE";
-            lexeme = "EOF";
             return;
         }
         int index = 1;
