@@ -1,3 +1,4 @@
+
 class Course:
     def __init__(self, course_name, course_number, course_section, course_term_year, course_student_count):
         self._name = course_name
@@ -81,6 +82,7 @@ while running:
 
         print("You are registered for " + str(len(courses)) + " courses!")
         print()
+
     if choice == 2:     # Add new registered course
         name = input("Enter the course name: ")
         number = int(input("Enter the course number: "))
@@ -92,6 +94,7 @@ while running:
 
         print("Course added to your registered courses!")
         print()
+
     if choice == 3:     # Edit a registered course
         print("Which course would you like to edit?")
         for i in range(len(courses)):
@@ -141,6 +144,7 @@ while running:
                     print("Course student count changed to " + str(new_value) + "!")
 
                 print()
+
     if choice == 4:     # Delete a registered course
         print("Which course would you like to delete?")
         for i in range(len(courses)):
@@ -159,6 +163,7 @@ while running:
             print("The following course has been deleted: ", end="")
             removed.print_name()
             print()
+            
     if choice == 5:     # Quit system
         running = False
 
