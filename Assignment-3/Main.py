@@ -163,7 +163,7 @@ while running:
             print("The following course has been deleted: ", end="")
             removed.print_name()
             print()
-            
+
     if choice == 5:     # Quit system
         running = False
 
