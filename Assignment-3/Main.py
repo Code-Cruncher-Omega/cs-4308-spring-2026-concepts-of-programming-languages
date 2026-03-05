@@ -96,13 +96,16 @@ while running:
         print()
 
     if choice == 3:     # Edit a registered course
+        if len(courses) == 0:
+            print("No courses registered to edit.")
+            continue
         print("Which course would you like to edit?")
         for i in range(len(courses)):
             print(str(i + 1) + ". ", end="")
             courses[i].print_name()
         print()
 
-        course_index = input("Enter your choice (1 through 5, enter nothing to cancel): ")
+        course_index = input("Enter your choice (1 through " + str(len(courses)) + ", enter nothing to cancel): ")
 
         if course_index != "":
             course_index = int(course_index)
@@ -115,7 +118,7 @@ while running:
             print("4. Course term and year.")
             print("5. Course student count.")
 
-            edit_choice = input("Enter your choice (1 through 5, enter nothing to cancel): ")
+            edit_choice = input("Enter your choice (1 through " + str(len(courses)) + ", enter nothing to cancel): ")
 
             if edit_choice != "":
                 edit_choice = int(edit_choice)
@@ -146,13 +149,16 @@ while running:
                 print()
 
     if choice == 4:     # Delete a registered course
+        if len(courses) == 0:
+            print("No courses registered to delete.")
+            continue
         print("Which course would you like to delete?")
         for i in range(len(courses)):
             print(str(i + 1) + ". ", end="")
             courses[i].print_name()
         print()
 
-        course_index = input("Enter your choice (1 through 5, enter nothing to cancel): ")
+        course_index = input("Enter your choice (1 through " + str(len(courses)) + ", enter nothing to cancel): ")
 
         if course_index != "":
             course_index = int(course_index)
