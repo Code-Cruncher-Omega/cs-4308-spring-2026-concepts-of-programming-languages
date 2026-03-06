@@ -3,25 +3,25 @@ import java.util.Collections;
 import java.util.List;
 
 public class LexerResults {
-    private final ArrayList<String> identifiers;
-    private final ArrayList<String> tokens;
-    private final ArrayList<String> lexemes;
+    private final ArrayList<String> IDENTIFIERS;
+    private final ArrayList<String> TOKENS;
+    private final ArrayList<String> LEXEMES;
 
     public LexerResults(ArrayList<String> identifiers, ArrayList<String> tokens, ArrayList<String> lexemes) {
-        this.identifiers = identifiers;
-        this.tokens = tokens;
-        this.lexemes = lexemes;
+        IDENTIFIERS = identifiers;
+        TOKENS = tokens;
+        LEXEMES = lexemes;
     }
 
-    public List<String> getIdentifiers() {
-        return Collections.unmodifiableList(identifiers);
+    public List<String> getIDENTIFIERS() {
+        return Collections.unmodifiableList(IDENTIFIERS);
     }
 
-    public List<String> getTokens() {
-        return Collections.unmodifiableList(tokens);
+    public List<String> getTOKENS() {
+        return Collections.unmodifiableList(TOKENS);
     }
 
-    public List<String> getLexemes() {
-        return Collections.unmodifiableList(lexemes);
+    public List<String> getLEXEMES() {
+        return Collections.unmodifiableList(LEXEMES);
     }
 }

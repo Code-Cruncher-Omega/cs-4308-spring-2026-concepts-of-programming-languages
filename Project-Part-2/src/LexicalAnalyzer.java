@@ -20,6 +20,9 @@ public class LexicalAnalyzer {
     private static String line;
     private static String tokenClass;
 
+    private static boolean firstWord;
+    private static boolean spaced;
+
     private LexicalAnalyzer() {}    // Non-instantiable constructor
 
     public static LexerResults printAnalysis(String fileName) {
@@ -32,6 +35,9 @@ public class LexicalAnalyzer {
         for(int i = 0 ; i < tokens.size() ; i++) {
             String tempToken = tokens.get(i);
             String tempLexeme = lexemes.get(i);
+            if(tempLexeme.length() > 1 && tempLexeme.charAt(0) == '\\' && tempLexeme.charAt(1) == 't') {
+                tempLexeme = tempLexeme.substring(2);
+            }
             System.out.println(tempToken + ((tempToken.length() < 8) ? "\t\t\t\t" : "\t\t\t") + tempLexeme);
         }
         System.out.println();
@@ -45,6 +51,7 @@ public class LexicalAnalyzer {
             tokens = new ArrayList<>();
             lexemes = new ArrayList<>();
             while((line = file.readLine()) != null) {
+                firstWord = true;
                 analyzeLine();
             }
             tokens.add("EOF");
@@ -64,14 +71,23 @@ public class LexicalAnalyzer {
                 continue;
             }
             tokens.add(tokenClass);
-            lexemes.add(lexeme);
+            if(firstWord && spaced) {
+                lexemes.add("\t" + lexeme);
+            } else {
+                lexemes.add(lexeme);
+            }
+            firstWord = false;
         }
     }
 
     private static void nextLexeme() {
+        spaced = false;
         int index = 0;
         while(line.charAt(index) == ' ') {
             index++;
+        }
+        if(index > 1) {
+            spaced = true;
         }
         line = line.substring(index);
     }
@@ -149,7 +165,7 @@ public class LexicalAnalyzer {
 
     private static String getTokenClass(char firstChar) {
         firstChar = (firstChar + "").toLowerCase().charAt(0);
-        return switch (firstChar) {
+        return switch(firstChar) {
             case '(' -> "LEFT_PAREN";
             case ')' -> "RIGHT_PAREN";
             case '{' -> "LEFT_BRACE";
@@ -157,13 +173,16 @@ public class LexicalAnalyzer {
             case '[' -> "LEFT_BRACK";
             case ']' -> "RIGHT_BRACK";
             case '=' -> "ASS_OP";
+            case '<' -> "LESS_OP";
+            case '>' -> "GREAT_OP";
             case '+' -> "ADD_OP";
             case '-' -> "SUB_OP";
             case '*' -> "MULT_OP";
             case '/' -> "DIV_OP";
-            case '!' -> "BOOL_NOT";
+            case '!' -> "NOT_OP";
             case '.' -> "PERIOD";
             case ',' -> "COMMA";
+            case ':' -> "COLON";
             case ';' -> "SEMICOLON";
             case ' ' -> "SPACE";     // Unreachable, but buildLexeme uses this to find the end of number literals
             default -> "UNKNOWN";
