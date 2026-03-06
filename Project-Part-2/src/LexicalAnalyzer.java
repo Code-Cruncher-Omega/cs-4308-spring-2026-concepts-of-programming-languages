@@ -21,7 +21,7 @@ public class LexicalAnalyzer {
     private static String tokenClass;
 
     private static boolean firstWord;
-    private static boolean spaced;
+    private static int tabs;
 
     private LexicalAnalyzer() {}    // Non-instantiable constructor
 
@@ -35,8 +35,8 @@ public class LexicalAnalyzer {
         for(int i = 0 ; i < tokens.size() ; i++) {
             String tempToken = tokens.get(i);
             String tempLexeme = lexemes.get(i);
-            if(tempLexeme.length() > 1 && tempLexeme.charAt(0) == '\\' && tempLexeme.charAt(1) == 't') {
-                tempLexeme = tempLexeme.substring(2);
+            while(tempLexeme.startsWith("\t")) {
+                tempLexeme = tempLexeme.substring(1);
             }
             System.out.println(tempToken + ((tempToken.length() < 8) ? "\t\t\t\t" : "\t\t\t") + tempLexeme);
         }
@@ -53,6 +53,19 @@ public class LexicalAnalyzer {
             while((line = file.readLine()) != null) {
                 firstWord = true;
                 analyzeLine();
+            }
+            int addTabs = 1;
+            for(int i = 0 ; i < lexemes.size() ; i++) {
+                int count = 0;
+                String temp = "";
+                while(count < addTabs) {
+                    temp += "\t";
+                    count++;
+                }
+                if(lexemes.get(i).startsWith("\t")) {
+                    addTabs++;
+                }
+                lexemes.set(i, temp + lexemes.get(i));
             }
             tokens.add("EOF");
             lexemes.add("END OF FILE");
@@ -71,25 +84,33 @@ public class LexicalAnalyzer {
                 continue;
             }
             tokens.add(tokenClass);
-            if(firstWord && spaced) {
-                lexemes.add("\t" + lexeme);
-            } else {
-                lexemes.add(lexeme);
+            if(firstWord) {
+                while(tabs > 0) {
+                    lexeme = "\t" + lexeme;
+                    tabs--;
+                }
             }
             firstWord = false;
+            lexemes.add(lexeme);
         }
     }
 
     private static void nextLexeme() {
-        spaced = false;
-        int index = 0;
-        while(line.charAt(index) == ' ') {
-            index++;
+        if(firstWord) {
+            tabs = 0;
+            String lineCopy = line;
+            while(lineCopy.startsWith("\t")) {
+                tabs++;
+                lineCopy = lineCopy.substring(1);
+            }
+            // MIGHT CAUSE ISSUES
+            if(lineCopy.startsWith(" ")) {
+                tabs++;
+            }
         }
-        if(index > 1) {
-            spaced = true;
+        while(line.startsWith(" ")) {
+            line = line.substring(1);
         }
-        line = line.substring(index);
     }
 
     private static void buildLexeme() {

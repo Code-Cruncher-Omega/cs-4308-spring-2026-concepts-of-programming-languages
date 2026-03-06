@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+
 import java.util.List;
 
 public class PythonParser {
@@ -11,16 +11,27 @@ public class PythonParser {
         return parse(LexicalAnalyzer.analyze(fileName));
     }
 
-    public String parse(LexerResults lexerResults) {
+    public static String parse(LexerResults lexerResults) {
         tokens = lexerResults.getTOKENS();
         lexemes = lexerResults.getLEXEMES();
 
         return parse(0);
     }
 
-    private String parse(int index) {   // Used whenever a non-terminal has not been encountered yet
+    private static String parse(int index) {   // Used whenever a non-terminal has not been encountered yet
         String token = tokens.get(index);
 
+        if(index != 0) {
+            int tabs = countTabs(lexemes.get(index));
+            String previousLexeme = lexemes.get(index - 1);
+            int previousTabs = countTabs(previousLexeme);
+            if(tabs - previousTabs > 0) {
+                return "Syntax Error: Too much indentation.";
+            }
+            if(previousTabs - tabs > 0) {
+                return "Syntax Error: Too little indentation.";
+            }
+        }
         if(token.equals("EOF")) {
             return "THE CODE SAMPLE IS ACCEPTED-\n(THE LANGUAGE IS ACCEPTED BY THE GRAMMAR)";
         }
@@ -41,11 +52,11 @@ public class PythonParser {
         return parse(index + 1);
     }
 
-    private String parse(int index, String expectation) {   // Used after "if" or "elif" has been encountered
+    private static String parse(int index, String expectation) {   // Used after "if" or "elif" has been encountered
         String lexeme = lexemes.get(index);
         String shortenedLexeme = lexeme;
-        if(shortenedLexeme.length() > 1 && shortenedLexeme.charAt(0) == '\\' && shortenedLexeme.charAt(1) == 't') {
-            shortenedLexeme = shortenedLexeme.substring(2);
+        while(shortenedLexeme.startsWith("\t")) {
+            shortenedLexeme = shortenedLexeme.substring(1);
         }
         String originalLexeme = lexeme;
         lexeme = shortenedLexeme;
@@ -85,16 +96,31 @@ public class PythonParser {
         }
         if(expectation.equals("colon")) {
             if(lexeme.equals(":")) {
-                return parse(index, "block");
+                return parse(index + 1, "block");
             }
             return "Syntax Error: Expected \"COLON\", but found \"" + lexeme + "\".";
         }
         if(expectation.equals("block")) {
-            if(tempLexeme.length() > 1 && tempLexeme.charAt(0) == '\\' && tempLexeme.charAt(1) == 't') {
-                tempLexeme = tempLexeme.substring(2);
+            if(lexeme.equals("elif")) {
+
+            }
+            if(lexeme.equals("else")) {
+                
+            }
+            int tabs = countTabs(originalLexeme);
+            // Because of the nature of the lexer, all "blocks" must have at least 1 \t and a preceding line.
+            String previousLexeme = lexemes.get(index - 1);
+            int previousTabs = countTabs(previousLexeme);
+            if(tabs == previousTabs) {
+                return parse(index + 1, expectation);
+            }
+            if(tabs < previousTabs) {
+                return parse(index + 1);   // If no elif or else, then go back to not expecting them.
+            }
+            if(tabs - previousTabs > 1 || !previousLexeme.equals(":")) {
+                return "Syntax Error: Too much indentation.";
             }
         }
-
         // Checks if the next lexeme is END_OF_FILE, elif, or else
         if(expectation.contains(lexeme)) {
             if (lexeme.equals("END_OF_FILE")) {
@@ -107,6 +133,14 @@ public class PythonParser {
                 return parse(index + 1, "block");
             }
         }
+
         return "Syntax Error: Expected \"ASS_OP\", but found \"" + lexeme + "\".";
+    }
+
+    private static int countTabs(String temp) {
+        if(temp.startsWith("\t")) {
+            return 1 + countTabs(temp.substring(1));
+        }
+        return 0;
     }
 }
