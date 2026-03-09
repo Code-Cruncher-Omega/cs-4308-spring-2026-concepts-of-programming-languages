@@ -50,23 +50,7 @@ public class LexicalAnalyzer {
             identifiers = new ArrayList<>();
             tokens = new ArrayList<>();
             lexemes = new ArrayList<>();
-            while((line = file.readLine()) != null) {
-                firstWord = true;
-                analyzeLine();
-            }
-            int addTabs = 1;
-            for(int i = 0 ; i < lexemes.size() ; i++) {
-                int count = 0;
-                String temp = "";
-                while(count < addTabs) {
-                    temp += "\t";
-                    count++;
-                }
-                if(lexemes.get(i).startsWith("\t")) {
-                    addTabs++;
-                }
-                lexemes.set(i, temp + lexemes.get(i));
-            }
+            while((line = file.readLine()) != null) { analyzeLine(); }
             tokens.add("EOF");
             lexemes.add("END OF FILE");
             return new LexerResults(identifiers, tokens, lexemes);
@@ -77,6 +61,8 @@ public class LexicalAnalyzer {
     }
 
     private static void analyzeLine() {
+        firstWord = true;
+        tabs = 0;
         while(!line.isEmpty()) {
             nextLexeme();
             buildLexeme();
@@ -84,11 +70,8 @@ public class LexicalAnalyzer {
                 continue;
             }
             tokens.add(tokenClass);
-            if(firstWord) {
-                while(tabs > 0) {
-                    lexeme = "\t" + lexeme;
-                    tabs--;
-                }
+            for(int currentTabs = 0 ; currentTabs < tabs ; currentTabs++) {
+                lexeme = "\t" + lexeme;
             }
             firstWord = false;
             lexemes.add(lexeme);
@@ -96,21 +79,12 @@ public class LexicalAnalyzer {
     }
 
     private static void nextLexeme() {
-        if(firstWord) {
-            tabs = 0;
-            String lineCopy = line;
-            while(lineCopy.startsWith("\t")) {
-                tabs++;
-                lineCopy = lineCopy.substring(1);
-            }
-            // MIGHT CAUSE ISSUES
-            if(lineCopy.startsWith(" ")) {
-                tabs++;
-            }
-        }
         while(line.startsWith(" ")) {
+            if(firstWord) { tabs++; }
             line = line.substring(1);
         }
+        if(firstWord) { tabs /= 4; }
+
     }
 
     private static void buildLexeme() {

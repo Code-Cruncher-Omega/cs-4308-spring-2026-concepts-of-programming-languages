@@ -14,14 +14,14 @@ public class LexerResults {
     }
 
     public List<String> getIDENTIFIERS() {
-        return Collections.unmodifiableList(IDENTIFIERS);
+        return new ArrayList<>(IDENTIFIERS);
     }
 
     public List<String> getTOKENS() {
-        return Collections.unmodifiableList(TOKENS);
+        return new ArrayList<>(TOKENS);
     }
 
     public List<String> getLEXEMES() {
-        return Collections.unmodifiableList(LEXEMES);
+        return new ArrayList<>(LEXEMES);
     }
 }
