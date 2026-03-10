@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LexicalAnalyzer {
+    private static final int TAB_SIZE = 4;
     // Keywords in Python
     private static final List<String> KEYWORDS = List.of(
             "False", "None", "True", "and", "as", "assert", "async",
@@ -27,21 +28,23 @@ public class LexicalAnalyzer {
 
     public static LexerResults printAnalysis(String fileName) {
         LexerResults results = analyze(fileName);
-        if(results == null) {
-            return null;
-        }
+
+        if(results == null) { return null; }
+
         System.out.println("Token\t\t\t\tLexeme");
         System.out.println();
+
         for(int i = 0 ; i < tokens.size() ; i++) {
             String tempToken = tokens.get(i);
             String tempLexeme = lexemes.get(i);
-            while(tempLexeme.startsWith("\t")) {
-                tempLexeme = tempLexeme.substring(1);
-            }
+
+            while(tempLexeme.startsWith("\t")) { tempLexeme = tempLexeme.substring(1); }
+
             System.out.println(tempToken + ((tempToken.length() < 8) ? "\t\t\t\t" : "\t\t\t") + tempLexeme);
         }
         System.out.println();
         System.out.println("Total pairs of tokens and lexemes: " + tokens.size() + " (Including 'EOF' and 'END OF FILE')");
+
         return results;
     }
 
@@ -50,12 +53,16 @@ public class LexicalAnalyzer {
             identifiers = new ArrayList<>();
             tokens = new ArrayList<>();
             lexemes = new ArrayList<>();
+
             while((line = file.readLine()) != null) { analyzeLine(); }
+
             tokens.add("EOF");
             lexemes.add("END OF FILE");
+
             return new LexerResults(identifiers, tokens, lexemes);
         } catch(IOException e) {
-            System.out.println("File not found!");
+            System.out.print("File not found!");
+
             return null;
         }
     }
@@ -63,16 +70,17 @@ public class LexicalAnalyzer {
     private static void analyzeLine() {
         firstWord = true;
         tabs = 0;
+
         while(!line.isEmpty()) {
             nextLexeme();
             buildLexeme();
-            if(lexeme.isEmpty() || tokenClass.isEmpty()) {
-                continue;
-            }
+
+            if(lexeme.isEmpty() || tokenClass.isEmpty()) { continue; }
+
             tokens.add(tokenClass);
-            for(int currentTabs = 0 ; currentTabs < tabs ; currentTabs++) {
-                lexeme = "\t" + lexeme;
-            }
+
+            for(int currentTabs = 0 ; currentTabs < tabs ; currentTabs++) { lexeme = "\t" + lexeme; }
+
             firstWord = false;
             lexemes.add(lexeme);
         }
@@ -80,36 +88,38 @@ public class LexicalAnalyzer {
 
     private static void nextLexeme() {
         while(line.startsWith(" ")) {
-            if(firstWord) { tabs++; }
+            if(firstWord) { tabs++; }   // Counts spaces
             line = line.substring(1);
         }
-        if(firstWord) { tabs /= 4; }
-
+        if(firstWord) { tabs /= TAB_SIZE; }    // Converts spaces into tabs
     }
 
     private static void buildLexeme() {
         lexeme = "";
         tokenClass = "";
-        if(line.isEmpty()) {
-            return;
-        }
+
+        if(line.isEmpty()) { return; }
+
         int index = 1;
         char firstChar = line.charAt(0);
         tokenClass = getTokenClass(firstChar);
+
         if(tokenClass.equals("UNKNOWN")) {
             if(firstChar == '"' || firstChar == '\'') {
                 tokenClass = "STR_LITERAL";
                 lexeme += firstChar;
                 char nextChar;
                 int increment;
+
                 while(!line.isEmpty() && index < line.length()) {
                     nextChar = line.charAt(index);
                     increment = 1;
-                    if(nextChar == '\\') {
-                        increment++;
-                    }
+
+                    if(nextChar == '\\') { increment++; }
+
                     lexeme += line.substring(index, index + increment);
                     line = line.substring(index + increment - 1);
+
                     if(nextChar == firstChar) {
                         line = line.substring(1);
                         break;
@@ -117,38 +127,39 @@ public class LexicalAnalyzer {
                 }
             } else if(isDigit(firstChar)) {     // Checks for float literals too
                 tokenClass = "INT_LITERAL";
-                while(getTokenClass(line.charAt(index)).equals("UNKNOWN")) {
-                    index++;
-                }
+
+                while(getTokenClass(line.charAt(index)).equals("UNKNOWN")) { index++; }
+
                 lexeme = line.substring(0, index);
                 line = line.substring(index);
+
                 // e or E indicates exponents which automatically defaults the variable to a float literal in Python
-                if(lexeme.contains(".") || lexeme.contains("e") || lexeme.contains("E")) {
-                    tokenClass = "FLOAT_LITERAL";
-                }
+                if(lexeme.contains(".") || lexeme.contains("e") || lexeme.contains("E")) { tokenClass = "FLOAT_LITERAL"; }
             } else if(isLetter(firstChar)) {
                 tokenClass = "IDENT";
-                while(getTokenClass(line.charAt(index)).equals("UNKNOWN")) {
-                    index++;
-                }
+
+                while(index < line.length() && getTokenClass(line.charAt(index)).equals("UNKNOWN")) { index++; }
+
                 lexeme = line.substring(0, index);
                 line = line.substring(index);
+
                 for(String keyword : KEYWORDS) {
                     if(lexeme.equals(keyword)) {
                         tokenClass = "KEYWORD";
                         return;     // Skip the other code since keywords aren't identifiers
                     }
                 }
+
                 boolean unique = true;
+
                 for(int i = 0 ; i < identifiers.toArray().length ; i++) {
                     if(lexeme.equals(identifiers.get(i))) {
                         unique = false;
                         break;
                     }
                 }
-                if(unique) {
-                    identifiers.add(lexeme);
-                }
+
+                if(unique) { identifiers.add(lexeme); }
             } else {
                 tokenClass = "ERROR! SOMETHING IN buildLexeme() FUCKED UP ;_;";
             }
@@ -195,6 +206,7 @@ public class LexicalAnalyzer {
 
     private static boolean isLetter(char input) {
         String temp = (input + "").toLowerCase();
+
         // Underscore can be a part of variable names
         return "_abcdefghijklmnopqrstuvwxyz".contains(temp);
     }
