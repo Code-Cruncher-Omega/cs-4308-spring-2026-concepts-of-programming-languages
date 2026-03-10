@@ -128,7 +128,7 @@ public class LexicalAnalyzer {
             } else if(isDigit(firstChar)) {     // Checks for float literals too
                 tokenClass = "INT_LITERAL";
 
-                while(getTokenClass(line.charAt(index)).equals("UNKNOWN")) { index++; }
+                while(index < line.length() && getTokenClass(line.charAt(index)).equals("UNKNOWN")) { index++; }
 
                 lexeme = line.substring(0, index);
                 line = line.substring(index);
