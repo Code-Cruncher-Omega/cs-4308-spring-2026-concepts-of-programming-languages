@@ -5,9 +5,9 @@ public class Main {
         Scanner scan = new Scanner(System.in);
         String input;
 
-        System.out.println("\t====================");
-        System.out.println("\t|\\ Python Parser /|");
-        System.out.println("\t====================");
+        System.out.println("\t=====================");
+        System.out.println("\t|\\  Python Parser  /|");
+        System.out.println("\t=====================");
 
         while(true) {
             System.out.print("Enter a file to scan (Enter nothing to quit program): ");

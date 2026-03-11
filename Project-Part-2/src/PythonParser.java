@@ -20,13 +20,15 @@ public class PythonParser {
         return parse(0);
     }
 
-    private static String parse(int index) {   // Used whenever a non-terminal has not been encountered yet
+    private static String parse(int index) {   // Used whenever a non-terminal has not been encountered yet.
         String token = tokens.get(index);
         int difference = 0;
+        String previousLexeme = "Current index: " + index;  // Initialized to something not blank; used index for debugging.
+        String currentLexeme = lexemes.get(index);
 
         if(index > 0) {
-            int tabs = countTabs(lexemes.get(index));
-            String previousLexeme = lexemes.get(index - 1);
+            int tabs = countTabs(currentLexeme);
+            previousLexeme = lexemes.get(index - 1);
             int previousTabs = countTabs(previousLexeme);
             previousLexeme = removeTabs(previousLexeme);
             difference = Math.abs(tabs - previousTabs);
@@ -35,6 +37,13 @@ public class PythonParser {
             if(tabs - previousTabs > 1 || (tabs - previousTabs == 1 && !previousLexeme.equals(":"))) {
                 return "Syntax Error: Too much indentation.";
             }
+        }
+
+        currentLexeme = removeTabs(currentLexeme);
+
+        // If the previous lexeme was blank, then it was originally an if, elif, or else.
+        if(currentLexeme.equals(":") && !previousLexeme.isBlank()) {
+            return "Syntax Error: \"" + token + "\" found but no if_stmt, elif_stmt, or else_block before it.";
         }
 
         if(tokens.get(index).equals("KEYWORD")) {
@@ -47,9 +56,9 @@ public class PythonParser {
 
                 return parse(index + 1, "named_expression");
             } else if(shortened.equals("elif") && difference == 0) {
-                return "Syntax Error: Found \"elif\", but no \"if\" before it.";
+                return "Syntax Error: \"elif\" found, but no if_stmt before it.";
             } else if(shortened.equals("else") && difference == 0) {
-                return "Syntax Error: Found \"else\", but no \"if\" or \"elif\" before it.";
+                return "Syntax Error: \"else\" found, but no if_stmt or elif_stmt before it.";
             }
         }
 
@@ -123,7 +132,7 @@ public class PythonParser {
             int previousTabs = countTabs(previousLexeme);
 
             if(tabs == previousTabs) {
-                switch (lexeme) {
+                switch(lexeme) {
                     case "if" -> {
                         String result = parse(index);
                         if (result.contains("Error")) {
@@ -138,6 +147,12 @@ public class PythonParser {
                         return "Syntax Error: Unexpected \"else\" with no \"if\" or \"elif\" before it.";
                     }
                 }
+
+                // If the previous lexeme was blank, then it was originally an if, elif, or else.
+                if(lexeme.equals(":") && !previousLexeme.isBlank()) {
+                    return "Syntax Error: \"" + token + "\" found but no if_stmt, elif_stmt, or else_block before it.";
+                }
+
                 return parse(index + 1, expectation);
             }
 
