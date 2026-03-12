@@ -23,12 +23,11 @@ public class PythonParser {
     private static String parse(int index) {   // Used whenever a non-terminal has not been encountered yet.
         String token = tokens.get(index);
         int difference = 0;
-        String previousLexeme = "Current index: " + index;  // Initialized to something not blank; used index for debugging.
         String currentLexeme = lexemes.get(index);
 
         if(index > 0) {
             int tabs = countTabs(currentLexeme);
-            previousLexeme = lexemes.get(index - 1);
+            String previousLexeme = lexemes.get(index - 1);
             int previousTabs = countTabs(previousLexeme);
             previousLexeme = removeTabs(previousLexeme);
             difference = Math.abs(tabs - previousTabs);
@@ -41,8 +40,31 @@ public class PythonParser {
 
         currentLexeme = removeTabs(currentLexeme);
 
-        // If the previous lexeme was blank, then it was originally an if, elif, or else.
-        if(currentLexeme.equals(":") && !previousLexeme.isBlank()) {
+        String stmt4 = "\"Current index: \" + index";   // Initialized to something not blank; used index for debugging.
+        String stmt5 = "\"Current index: \" + index";
+        String block = "\"Current index: \" + index";
+
+        if(index > 0) {
+            block = lexemes.get(index - 1); // Should be else (blank);
+            block = removeTabs(block);
+        }
+
+        if(index > 3) {
+            stmt4 = lexemes.get(index - 4);  // Should be if or elif (blank).
+            stmt4 = removeTabs(stmt4);
+        }
+
+        if(index > 4) {
+            stmt5 = lexemes.get(index - 5);  // Should be if or elif (blank) when the comparison operator is two lexemes.
+            stmt5 = removeTabs(stmt5);
+        }
+
+        // If the fifth-previous lexeme is blank, then it was originally an if or elif (good) and the comparison
+        // operator is two lexemes.
+        // If the fourth-previous lexeme is blank, then it was originally an if or elif (good).
+        // Third, second, and first previous lexemes should be a part of the named_expression.
+        // If the first-previous lexeme is blank, then it was originally an else (good).
+        if(currentLexeme.equals(":") && (!stmt5.isEmpty() && !stmt4.isEmpty() && !block.isEmpty())) {
             return "Syntax Error: \"" + token + "\" found but no if_stmt, elif_stmt, or else_block before it.";
         }
 
@@ -148,8 +170,29 @@ public class PythonParser {
                     }
                 }
 
-                // If the previous lexeme was blank, then it was originally an if, elif, or else.
-                if(lexeme.equals(":") && !previousLexeme.isBlank()) {
+                String stmt4 = "\"Current index: \" + index";   // Initialized to something not blank; used index for debugging.
+                String stmt5 = "\"Current index: \" + index";
+                String block;
+
+                block = lexemes.get(index - 1); // Should be else (blank);
+                block = removeTabs(block);
+
+                if(index > 3) {
+                    stmt4 = lexemes.get(index - 4);  // Should be if or elif (blank).
+                    stmt4 = removeTabs(stmt4);
+                }
+
+                if(index > 4) {
+                    stmt5 = lexemes.get(index - 5);  // Should be if or elif (blank) when the comparison operator is two lexemes.
+                    stmt5 = removeTabs(stmt5);
+                }
+
+                // If the fifth-previous lexeme is blank, then it was originally an if or elif (good) and the comparison
+                // operator is two lexemes.
+                // If the fourth-previous lexeme is blank, then it was originally an if or elif (good).
+                // Third, second, and first previous lexemes should be a part of the named_expression.
+                // If the first-previous lexeme is blank, then it was originally an else (good).
+                if(lexeme.equals(":") && (!stmt5.isEmpty() && !stmt4.isEmpty() && !block.isEmpty())) {
                     return "Syntax Error: \"" + token + "\" found but no if_stmt, elif_stmt, or else_block before it.";
                 }
 
@@ -166,13 +209,15 @@ public class PythonParser {
                         }
                     } else {
                         if(lexeme.equals("elif")) { // Same idea as if_stmt, but can only trigger here.
-                            lexemes.set(index, stringOfTabs(tabs)); // Essentially, the lexeme is set blank as to not
-                                                                    // reread the same non-terminals for checking nested
-                                                                    // if, elif, or else's.
+                            // Essentially, the lexeme is set blank as to not reread the same non-terminals for checking
+                            // nested if, elif, or else's.
+                            lexemes.set(index, stringOfTabs(tabs));
+
                             return parse(index + 1, "named_expression");
                         }
                         if(lexeme.equals("else")) {
                             lexemes.set(index, stringOfTabs(tabs));
+
                             return parse(index + 1, "else_block");
                         }
                     }
