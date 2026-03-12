@@ -16,7 +16,9 @@ else_block:
 > `x != 0`<br/>
 > `12 > 0`<br/>
 > `z == y`<br/>
-> `6 <= w`
+> `6 <= w`<br/>
+> [!WARNING]
+> Nested if, elif, and else statements were not thoroughly tested or implemented, so your mileage may vary!
 ## CLI Execution
  1. Clone repository.
  2. Run the following command in root of the project:<br/>

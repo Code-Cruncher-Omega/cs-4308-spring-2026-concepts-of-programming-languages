@@ -125,21 +125,17 @@ public class PythonParser {
             return "Syntax Error: Expected \"" + expectation + "\", but found \"" + lexeme + "\".";
         }
 
-        if(expectation.contains("equals") && lexeme.equals("=")) {
-            return parse(index + 1, "value");
-        }
+        if(expectation.contains("equals") && lexeme.equals("=")) { return parse(index + 1, "value"); }
 
         if(expectation.contains("value")) {
-            if(lexemeIsNumber) {
-                return parse(index + 1, "colon");
-            }
+            if(lexemeIsNumber) { return parse(index + 1, "colon"); }
+
             return "Syntax Error: Expected \"INT_LITERAL\", \"FLOAT_LITERAL\", or \"IDENT\", but found \"" + lexeme + "\".";
         }
 
         if(expectation.equals("colon")) {
-            if(lexeme.equals(":")) {
-                return parse(index + 1, "block");
-            }
+            if(lexeme.equals(":")) { return parse(index + 1, "block"); }
+
             return "Syntax Error: Expected \"COLON\", but found \"" + lexeme + "\".";
         }
 
@@ -156,11 +152,7 @@ public class PythonParser {
             if(tabs == previousTabs) {
                 switch(lexeme) {
                     case "if" -> {
-                        String result = parse(index);
-                        if (result.contains("Error")) {
-                            return result;
-                        }
-                        return parse(index + 1, expectation);
+                        return parse(index);
                     }
                     case "elif" -> {
                         return "Syntax Error: Unexpected \"elif\" with no \"if\" before it.";
@@ -229,9 +221,11 @@ public class PythonParser {
             // tabs > previousTabs
             if(difference == 1) {
                 previousLexeme = removeTabs(previousLexeme);
-                if(previousLexeme.equals(":")) {    // For nested if, elif, or else's, or first lexeme of the block.
-                    return parse(index + 1, expectation);
-                }
+
+                // For nested if, elif, or else's, or first lexeme of the block.
+                if(previousLexeme.equals(":")) { return parse(index + 1, expectation); }
+
+                return "Syntax Error: Expected \"COLON\", but found \"" + lexeme + "\".";
             }
 
             return "Syntax Error: Too much indentation.";
