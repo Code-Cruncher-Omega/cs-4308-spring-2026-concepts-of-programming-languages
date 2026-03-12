@@ -30,7 +30,7 @@ else_block:
 > `..\test.txt` is a relative path from the root directory. It is recommended to use absolute paths to refer to files
 > when using this program specifically.
 
-## Screenshot
+## Screenshots
 Correct code with no syntax issues: <br/>
 ![Syntax Analyzer Screenshot 1 - Correct code](screenshot1.png) <br/><br/>
 Incorrect code missing a colon by the elif statement: <br/>
