@@ -16,7 +16,8 @@ else_block:
 > `x != 0`<br/>
 > `12 > 0`<br/>
 > `z == y`<br/>
-> `6 <= w`<br/>
+> `6 <= w`
+
 > [!WARNING]
 > Nested if, elif, and else statements were not thoroughly tested or implemented, so your mileage may vary!
 ## CLI Execution
