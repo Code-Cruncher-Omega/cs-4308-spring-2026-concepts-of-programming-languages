@@ -6,11 +6,20 @@ import java.util.List;
 
 public class LexicalAnalyzer {
     private static final List<String> KEYWORDS = List.of(
+            // Java keywords
             "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const",
             "continue", "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for",
             "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "package",
             "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch",
-            "synchronized", "this", "throw", "throws", "transient", "try", "void", "volatile", "while", "_");
+            "synchronized", "this", "throw", "throws", "transient", "try", "void", "volatile", "while", "_",
+
+            // Python specific keywords
+            "False", "None", "True", "and", "as", "async", "await", "def", "elif", "except", "from", "global", "in",
+            "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "with", "yield");
+    private static final List<String> PYTHON_SPECIFIC = List.of(
+            "False", "None", "True", "and", "as", "async", "await", "def", "elif", "except", "from", "global", "in",
+            "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "with", "yield");
+
     private static ArrayList<String> identifiers;   // Not used, but stored in case of future use
     private static ArrayList<String> tokens;    // Same size as lexemes arraylist
     private static ArrayList<String> lexemes;
@@ -19,9 +28,10 @@ public class LexicalAnalyzer {
     private static String line;
     private static String tokenClass;
 
+    private static boolean isPython = false;
+
     private LexicalAnalyzer() {}    // Non-instantiable constructor
 
-    // ONLY WORKS IF THE FILE IS SYNTACTICALLY CORRECT IN THE JAVA PROGRAMMING LANGUAGE!!!!!
     public static LexerResults printAnalysis(String fileName) {
         LexerResults results = analyze(fileName);
         if(results == null) {
@@ -47,6 +57,55 @@ public class LexicalAnalyzer {
             while((line = file.readLine()) != null) {
                 analyzeLine();
             }
+            for(String keyword : PYTHON_SPECIFIC) {
+                for(String tempLexeme : lexemes) {
+                    if(keyword.equals(tempLexeme)) {
+                        isPython = true;
+                        break;
+                    }
+                }
+                if(isPython) {
+                    break;
+                }
+            }
+            if(isPython) {
+                for(int i = 0 ; i < tokens.toArray().length ; i++) {
+                    String token = tokens.get(i);
+                    // e or E indicates exponents which automatically defaults the variable to a float literal in Python
+                    if(token.equals("INT_LITERAL")) {
+                        String tempLexeme = lexemes.get(i);
+                        if(tempLexeme.contains("e") || tempLexeme.contains("E")) {
+                            tokens.set(i, "FLOAT_LITERAL");
+                        }
+                    }
+                    if(token.equals("DOUBLE_LITERAL")) {
+                        tokens.set(i, "FLOAT_LITERAL");
+                    }
+                }
+            } else {
+                for(int i = 0 ; i < tokens.toArray().length ; i++) {
+                    String token = tokens.get(i);
+                    String tempLexeme = lexemes.get(i);
+                    if(token.equals("STR_LITERAL")) {
+                        // Essentially check if it follows 'x' or '\x', aka char literal pattern, otherwise error.
+                        if(tempLexeme.startsWith("'")) {
+                            if(tempLexeme.charAt(1) == '\\') {
+                                if(tempLexeme.charAt(3) == '\'') {
+                                    tokens.set(i, "CHAR_LITERAL");
+                                } else {
+                                    tokens.set(i, "NOT A REAL CHAR_LITERAL");
+                                }
+                            } else {
+                                if(tempLexeme.charAt(2) == '\'') {
+                                    tokens.set(i, "CHAR_LITERAL");
+                                } else {
+                                    tokens.set(i, "NOT A REAL CHAR_LITERAL");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             tokens.add("EOF");
             lexemes.add("END OF FILE");
             return new LexerResults(identifiers, tokens, lexemes);
@@ -69,11 +128,7 @@ public class LexicalAnalyzer {
     }
 
     private static void nextLexeme() {
-        int index = 0;
-        while(line.charAt(index) == ' ') {
-            index++;
-        }
-        line = line.substring(index);
+        while(line.startsWith(" ")) { line = line.substring(1); }
     }
 
     private static void buildLexeme() {
@@ -86,36 +141,25 @@ public class LexicalAnalyzer {
         char firstChar = line.charAt(0);
         tokenClass = getTokenClass(firstChar);
         if(tokenClass.equals("UNKNOWN")) {
-            if(firstChar == '"') {
+            if(firstChar == '"' || firstChar == '\'') {
                 tokenClass = "STR_LITERAL";
-                lexeme += "\"";
+                lexeme += firstChar;
                 char nextChar;
                 int increment;
                 while(!line.isEmpty() && index < line.length()) {
                     nextChar = line.charAt(index);
                     increment = 1;
-                    if(nextChar == '\\') {
-                        increment++;
-                    }
+                    if(nextChar == '\\') { increment++; }
                     lexeme += line.substring(index, index + increment);
                     line = line.substring(index + increment - 1);
-                    if(nextChar == '"') {
+                    if(nextChar == firstChar) {
                         line = line.substring(1);
                         break;
                     }
                 }
-            } else if(firstChar == '\'') {
-                tokenClass = "CHAR_LITERAL";
-                if(line.charAt(1) == '\\') {
-                    lexeme = line.substring(0, 4);
-                    line = line.substring(4);
-                } else {
-                    lexeme = line.substring(0, 3);
-                    line = line.substring(3);
-                }
             } else if(isDigit(firstChar)) {     // Checks for double and float literals too
                 tokenClass = "INT_LITERAL";
-                while(getTokenClass(line.charAt(index)).equals("UNKNOWN")) {
+                while(index < line.length() && getTokenClass(line.charAt(index)).equals("UNKNOWN")) {
                     index++;
                 }
                 lexeme = line.substring(0, index);
@@ -130,7 +174,7 @@ public class LexicalAnalyzer {
                 }
             } else if(isLetter(firstChar)) {
                 tokenClass = "IDENT";
-                while(getTokenClass(line.charAt(index)).equals("UNKNOWN")) {
+                while(index < line.length() && getTokenClass(line.charAt(index)).equals("UNKNOWN")) {
                     index++;
                 }
                 lexeme = line.substring(0, index);
@@ -162,42 +206,28 @@ public class LexicalAnalyzer {
 
     private static String getTokenClass(char firstChar) {
         firstChar = (firstChar + "").toLowerCase().charAt(0);
-        switch(firstChar) {
-            case '(':
-                return "LEFT_PAREN";
-            case ')':
-                return "RIGHT_PAREN";
-            case '{':
-                return "LEFT_BRACE";
-            case '}':
-                return "RIGHT_BRACE";
-            case '[':
-                return "LEFT_BRACK";
-            case ']':
-                return "RIGHT_BRACK";
-            case '=':
-                return "ASS_OP";
-            case '+':
-                return "ADD_OP";
-            case '-':
-                return "SUB_OP";
-            case '*':
-                return "MULT_OP";
-            case '/':
-                return "DIV_OP";
-            case '!':
-                return "BOOL_NOT";
-            case '.':
-                return "PERIOD";
-            case ',':
-                return "COMMA";
-            case ';':
-                return "SEMICOLON";
-            case ' ':
-                return "SPACE";     // Unreachable, but buildLexeme uses this to find the end of number literals
-            default:
-                return "UNKNOWN";
-        }
+        return switch (firstChar) {
+            case '(' -> "LEFT_PAREN";
+            case ')' -> "RIGHT_PAREN";
+            case '{' -> "LEFT_BRACE";
+            case '}' -> "RIGHT_BRACE";
+            case '[' -> "LEFT_BRACK";
+            case ']' -> "RIGHT_BRACK";
+            case '=' -> "ASS_OP";
+            case '<' -> "LESS_OP";
+            case '>' -> "GREAT_OP";
+            case '+' -> "ADD_OP";
+            case '-' -> "SUB_OP";
+            case '*' -> "MULT_OP";
+            case '/' -> "DIV_OP";
+            case '!' -> "NOT_OP";
+            case '.' -> "PERIOD";
+            case ',' -> "COMMA";
+            case ':' -> "COLON";
+            case ';' -> "SEMICOLON";
+            case ' ' -> "SPACE";     // Unreachable, but buildLexeme uses this to find the end of number literals
+            default -> "UNKNOWN";
+        };
     }
 
     private static boolean isDigit(char input) {
