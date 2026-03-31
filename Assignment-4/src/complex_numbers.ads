@@ -1,8 +1,13 @@
 package complex_numbers is
    
+   -- Set up instantiable variable 'Values' with default sub-values := 0.0
+   -- 'Values' are also referred to as 'Complex[number]' in functions
    type Values is tagged record
       Real, Complex : Float := 0.0;
    end record;
+   
+   -- Set up functions and procedures provided by complex_numbers as well as
+   -- specify their return values and parameters
    
    function Create_Complex return Values;
    

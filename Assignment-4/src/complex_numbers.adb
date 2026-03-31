@@ -63,6 +63,7 @@ package body complex_numbers is
       -- inputs and outputs, specifically for Float types
       package Custom_Float_IO is new Ada.Text_IO.Float_IO (Float);
       use Custom_Float_IO;
+      
    begin
       -- Modifies the variable that sets the upper limit as to how big the exponent
       -- can be, so no exponent will be shown when printing a Float type
