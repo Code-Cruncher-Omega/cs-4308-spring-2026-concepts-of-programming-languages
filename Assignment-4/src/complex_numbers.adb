@@ -49,9 +49,10 @@ package body complex_numbers is
    -- Results = Complex1 / Complex2
    function Calculate_Quotient (Complex1, Complex2 : Values) return Values is
       Result : Values;
+      Denominator : Float := Complex2.Real ** 2 + Complex2.Complex ** 2;
    begin
-      Result.Real := (Complex1.Real * Complex2.Real + Complex1.Complex * Complex2.Complex) / (Complex2.Real ** 2 + Complex2.Complex ** 2);
-      Result.Complex := (Complex1.Complex * Complex2.Real - Complex1.Real * Complex2.Complex) / (Complex2.Real ** 2 + Complex2.Complex ** 2);
+      Result.Real := (Complex1.Real * Complex2.Real + Complex1.Complex * Complex2.Complex) / Denominator;
+      Result.Complex := (Complex1.Complex * Complex2.Real - Complex1.Real * Complex2.Complex) / Denominator;
       
       return Result;
    end Calculate_Quotient;
