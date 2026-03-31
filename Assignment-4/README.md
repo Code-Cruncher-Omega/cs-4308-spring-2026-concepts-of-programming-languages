@@ -1,5 +1,5 @@
 # Simple Complex Number Calculator
-Allows user to define two complex numbers and calculate their sum, difference, product, and quotient.<br/>
+Allows users to define two complex numbers and calculate their sum, difference, product, and quotient.<br/>
 Comes with two complex numbers already set up for use.<br/>
 ## CLI Execution
  1. Clone repository.
