@@ -1,6 +1,6 @@
 package complex_numbers is
    
-   -- Set up instantiable variable 'Values' with default sub-values := 0.0
+   -- Set up a "class" called 'Values' with attributes that default to 0.0
    -- 'Values' are also referred to as 'Complex[number]' in functions
    type Values is tagged record
       Real, Complex : Float := 0.0;

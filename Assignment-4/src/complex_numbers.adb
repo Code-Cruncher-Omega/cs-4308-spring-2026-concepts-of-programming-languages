@@ -7,9 +7,9 @@ package body complex_numbers is
    
    -- Create and return a new instance of 'Values'
    function Create_Complex return Values is
-      New_Values : Values;
+      New_Complex : Values;
    begin
-      return New_Values;
+      return New_Complex;
    end Create_Complex;
    
    -- Create and return a new instance of 'Values' set to the sum of two 'Values'
